@@ -1,16 +1,37 @@
 # Code copied by https://geshan.com.np/blog/2023/01/nextjs-docker/
 
+# version: '3.8'
+# services:
+#   web:
+#     container_name: 'database-training-web'
+#     build:
+#       context: ./
+#       target: runner
+#     volumes:
+#         - /usr/src/app
+#         - /usr/src/app/node_modules
+#         - /usr/src/app/.next
+#         # - .:/node_modules
+#         # - .:/usr/src/app
+#       # - .:/app
+#       # - .:/node_modules
+#     command: npm run dev
+#     ports:
+#       - "3000:3000"
+#     environment:
+#       NODE_ENV: development
+
 version: '3.8'
 services:
   web:
-    container_name: 'database-training-web'
+    container_name: database-training-web
     build:
-      context: ./
-      target: runner
-    volumes:
-      - .:/app
-    command: npm run dev
+      context: .
     ports:
       - "3000:3000"
+    volumes:
+      - .:/app
+      # Add any other volumes you need for your application here
     environment:
       NODE_ENV: development
+    command: npm run dev
