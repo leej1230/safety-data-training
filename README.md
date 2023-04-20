@@ -42,3 +42,5 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/deploym
 - run npm install locally to get all node_modules
 - Give permission to run.sh by running chmod +x run.sh
 - run ./run.sh
+- or
+- npm run dev
