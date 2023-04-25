@@ -1,14 +1,83 @@
-.container {
+.title {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 400px;
-    margin-top: -50px;
+    margin-top: -25px;
+    font-size: 2.3rem;
   }
 
-  .description {
+
+  .webtitle {
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 30px;
+    font-size: 1.5rem;
+    margin-left: 7rem;
+
+  }
+
+  .buttonsContainer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .button1 {
+    margin-right: 5px;
+    height: 35px;
+    width: 70px;
+    margin: 20px;
+    background-color: rgba(178, 126, 221, 0.815);
+    color: black;
+    border-radius: 4px;
+    border-color: black;
+    
+
+  }
+
+  .button2 {
+    
+    height: 35px;
+    width: 70px;
+    margin: 20px;
+    background-color: rgba(231, 143, 28, 0.893);
+    color: black;
+    border-radius: 4px;
+    border-color: black;
+    
+
+  }
+
+  .button3 {
+    
+    height: 35px;
+    width: 70px;
+    margin: 20px;
+    background-color: rgba(239, 217, 45, 0.893);
+    color: black;
+    border-radius: 4px;
+    border-color: black;
+    
+
+  }
+
+  .description1 {
+    max-width: 44rem;
+    margin: 0 auto 2rem;
     text-align: center;
-    margin-top: 100px;
+    margin-top: -150px;
+    font-size: 1.25rem;
+  }
+
+  .description2 {
+    max-width: 40rem;
+    margin: 0 auto 2rem;
+    text-align: center;
+    margin-top: -20px;
+    font-size: 1.25rem;
   }
   
   
