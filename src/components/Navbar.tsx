@@ -6,7 +6,7 @@ import NavItem from "./NavItem";
 // import "./Navbar.css";
 
 const MENU_LIST = [
-  { text: "Sign In", href: "/" },
+  { text: "Sign In", href: "/signin" },
   { text: "About Us", href: "/about" },
   { text: "Help", href: "/contact" },
 ];
