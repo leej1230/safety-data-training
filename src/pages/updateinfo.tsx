@@ -81,7 +81,13 @@ const UpdateInfo = () => {
                 </div>
 
                 <div className="text-center my-3">
-                  <Button variant="contained" endIcon={<Upload />}>
+                  <Button
+                    variant="contained"
+                    endIcon={<Upload />}
+                    onClick={() => {
+                      window.location.href = "/certificatelanding";
+                    }}
+                  >
                     Submit
                   </Button>
                 </div>
