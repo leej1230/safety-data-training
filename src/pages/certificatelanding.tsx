@@ -43,7 +43,7 @@ const CertificateLanding = () => {
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col" colspan="2">
+                <th scope="col" colSpan={2}>
                   Certificate Title
                 </th>
                 <th scope="col">Approved Date</th>
@@ -56,7 +56,7 @@ const CertificateLanding = () => {
                 return (
                   <tr key={index}>
                     <th scope="row">{index + 1}</th>
-                    <td colspan="2">{cdata.CertificateTitle}</td>
+                    <td colSpan={2}>{cdata.CertificateTitle}</td>
                     <td>{cdata.ApprovedDate}</td>
                     <td>{cdata.ExpirationDate}</td>
                     <td>{cdata.Status}</td>
