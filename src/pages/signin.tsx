@@ -1,7 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
-import { TextField, Button } from "@mui/material";
-import { Upload } from "@mui/icons-material";
+import Link from "next/link";
 
 const formVerticalMargin = "my-2";
 
@@ -27,7 +26,7 @@ const SignIn = () => {
           </h3>
           <div className="row">
             <div>
-              <a
+              <Link
                 className="btn btn-outline-dark"
                 href="/updateinfo"
                 role="button"
@@ -40,7 +39,7 @@ const SignIn = () => {
                   src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png"
                 />
                 Login with Google
-              </a>
+              </Link>
             </div>
           </div>
         </div>
