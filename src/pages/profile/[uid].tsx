@@ -30,7 +30,7 @@ const Profile = () => {
         </div>
       </div>
 
-      <div className="text-center" style={{ marginTop: '-700px' }}>
+      <div className="text-center" style={{ marginTop: '-600px' }}>
         <div className="d-inline-block bg-light rounded p-2" >
           <p className="m-0 fs-3">Student ID:  {userData.student_id}</p>
           <p className="m-0 fs-3">UC Davis Email:  {userData.email}</p>
