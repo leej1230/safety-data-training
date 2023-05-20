@@ -1,10 +1,23 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
 import Link from "next/link";
+import firebaseui from "firebaseui";
+import {firebaseApp, auth, firestore, provider} from "../../lib/FirebaseConfig";
+import GoogleButton from "react-google-button";
+import { signInWithPopup } from "firebase/auth";
 
 const formVerticalMargin = "my-2";
 
 const SignIn = () => {
+
+  const handleGoogleSignIn = async () =>{
+    try {
+      signInWithPopup(auth,provider);
+    } catch(e) {
+      console.log(e)
+    }
+  }
+
   return (
     <>
       <Head>
@@ -25,7 +38,7 @@ const SignIn = () => {
             email
           </h3>
           <div className="row">
-            <div>
+            {/* <div>
               <Link
                 className="btn btn-outline-dark"
                 href="/updateinfo"
@@ -40,6 +53,9 @@ const SignIn = () => {
                 />
                 Login with Google
               </Link>
+            </div> */}
+            <div>
+              <GoogleButton onClick={handleGoogleSignIn}/>
             </div>
           </div>
         </div>
