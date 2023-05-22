@@ -5,14 +5,17 @@ import firebaseui from "firebaseui";
 import {firebaseApp, auth, firestore, provider} from "../../lib/FirebaseConfig";
 import GoogleButton from "react-google-button";
 import { signInWithPopup } from "firebase/auth";
+import {useRouter} from 'next/router';
 
 const formVerticalMargin = "my-2";
 
 const SignIn = () => {
+  const router = useRouter();
 
   const handleGoogleSignIn = async () =>{
     try {
-      signInWithPopup(auth,provider);
+      const result = await signInWithPopup(auth,provider);
+      router.push('/updateinfo')
     } catch(e) {
       console.log(e)
     }
