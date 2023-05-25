@@ -1,21 +1,36 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
-import Link from "next/link";
-import firebaseui from "firebaseui";
 import {firebaseApp, auth, firestore, provider} from "../../lib/FirebaseConfig";
 import GoogleButton from "react-google-button";
 import { signInWithPopup } from "firebase/auth";
 import {useRouter} from 'next/router';
-
-const formVerticalMargin = "my-2";
+import { getDoc, doc } from "firebase/firestore";
 
 const SignIn = () => {
   const router = useRouter();
 
+  const checkUserExists = async (uid:string) => {
+    try {
+      const userDocRef = doc(firestore, 'users', uid);
+      const userDocSnap = await getDoc(userDocRef);
+      // const userDoc = await getDoc(collection(firestore,"users",uid));
+      // const userDoc = await firestore.collection('users').doc(uid).get();
+      return userDocSnap.exists;
+    } catch (error) {
+      console.log('Error checking user information:', error?.toString());
+      return false;
+    }
+  };
+
   const handleGoogleSignIn = async () =>{
     try {
       const result = await signInWithPopup(auth,provider);
-      router.push('/updateinfo')
+      const userExists = await checkUserExists(result.user.uid);
+      if(userExists){
+        router.push('/updateinfo');
+      } else {
+        router.push('/certificatelanding');
+      }
     } catch(e) {
       console.log(e)
     }
@@ -41,22 +56,6 @@ const SignIn = () => {
             email
           </h3>
           <div className="row">
-            {/* <div>
-              <Link
-                className="btn btn-outline-dark"
-                href="/updateinfo"
-                role="button"
-                style={{ textTransform: "none" }}
-              >
-                <img
-                  width="20px"
-                  style={{ marginBottom: "3px", marginRight: "5px" }}
-                  alt="Google sign-in"
-                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png"
-                />
-                Login with Google
-              </Link>
-            </div> */}
             <div>
               <GoogleButton onClick={handleGoogleSignIn}/>
             </div>
