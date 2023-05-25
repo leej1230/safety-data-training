@@ -4,18 +4,16 @@ import {firebaseApp, auth, firestore, provider} from "../../lib/FirebaseConfig";
 import GoogleButton from "react-google-button";
 import { signInWithPopup } from "firebase/auth";
 import {useRouter} from 'next/router';
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, query, where, getDocs, collection } from "firebase/firestore";
 
 const SignIn = () => {
   const router = useRouter();
 
   const checkUserExists = async (uid:string) => {
     try {
-      const userDocRef = doc(firestore, 'users', uid);
-      const userDocSnap = await getDoc(userDocRef);
-      // const userDoc = await getDoc(collection(firestore,"users",uid));
-      // const userDoc = await firestore.collection('users').doc(uid).get();
-      return userDocSnap.exists;
+      const q = query(collection(firestore, 'users'), where('uid', '==', uid));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.empty;
     } catch (error) {
       console.log('Error checking user information:', error?.toString());
       return false;
