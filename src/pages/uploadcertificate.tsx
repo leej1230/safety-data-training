@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
+import { useRouter } from "next/router";
+import { auth } from "../../lib/FirebaseConfig";
 import { TextField, Button, Input, MenuItem, Select } from "@mui/material";
 import { Upload } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
@@ -10,21 +12,40 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 const formVerticalMargin = "my-2";
 
 const UploadCertificate = () => {
+  const router = useRouter();
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedOption, setSelectedOption] = useState("");
+  const [showTrainingName, setShowTrainingName] = useState(false);
+  const [training, setTraining] = useState("");
 
-  const handleChange = (event: any) => {
-    setSelectedOption(event.target.value);
+  const getCurrentUserUid = () => {
+    const user = auth.currentUser;
+    if (user) {
+      const uid = user.uid;
+      console.log("Current user UID:", uid);
+      return uid;
+    } else {
+      console.log("No user is currently logged in.");
+      router.push("/login");
+      return null;
+    }
   };
 
-  const handleFileInput = (event: any) => {
-    setSelectedFile(event.target.files[0]);
+  const handleChange = (event: any) => {
+    const selectedValue = event.target.value;
+    setSelectedOption(selectedValue);
+    setShowTrainingName(selectedValue === "other");
+  };
+
+  const handleTrainingChange = (event: any) => {
+    setTraining(event.target.value);
   };
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
     console.log(selectedFile);
-    // Do something with the selected file, e.g. upload it to a server
+    console.log(training);
+    // Do something with the selected file and training value, e.g. upload it to a server
   };
 
   return (
@@ -56,23 +77,27 @@ const UploadCertificate = () => {
                     style={{ width: "100%" }}
                     onChange={handleChange}
                   >
-                    <MenuItem value="option1">Training A</MenuItem>
-                    <MenuItem value="option2">Training B</MenuItem>
-                    <MenuItem value="option3">Training C</MenuItem>
+                    <MenuItem value="Training A">Training A</MenuItem>
+                    <MenuItem value="Training B">Training B</MenuItem>
+                    <MenuItem value="other">Other</MenuItem>
                   </TextField>
                 </div>
 
-                <div
-                  className={`form-outline text-center ${formVerticalMargin}`}
-                >
-                  <p>Name of the Training (optional)</p>
-                  <TextField
-                    required
-                    id="outlined-required"
-                    label="Last Name"
-                    placeholder="Doe"
-                  />
-                </div>
+                {showTrainingName && (
+                  <div
+                    className={`form-outline text-center ${formVerticalMargin}`}
+                  >
+                    <p>Name of the Training (optional)</p>
+                    <TextField
+                      required
+                      id="outlined-required"
+                      label="Training Name"
+                      placeholder="Doe"
+                      value={training}
+                      onChange={handleTrainingChange}
+                    />
+                  </div>
+                )}
 
                 <div
                   className={`form-outline text-center ${formVerticalMargin}`}
@@ -88,12 +113,21 @@ const UploadCertificate = () => {
                 >
                   <p>Upload File</p>
                   <form onSubmit={handleSubmit}>
-                    <Input type="file" onChange={handleFileInput} />
+                    <Input
+                      type="file"
+                      onChange={(e: any) => {
+                        setSelectedFile(e.target.files[0]);
+                      }}
+                    />
                   </form>
                 </div>
 
                 <div className="text-center my-3">
-                  <Button variant="contained" endIcon={<Upload />}>
+                  <Button
+                    variant="contained"
+                    endIcon={<Upload />}
+                    onClick={handleSubmit}
+                  >
                     Submit
                   </Button>
                 </div>
