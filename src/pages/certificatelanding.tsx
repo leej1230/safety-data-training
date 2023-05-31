@@ -1,7 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
-import { Button } from "@mui/material";
-import { NoteAdd } from "@mui/icons-material";
+import  Button from "@mui/material/Button";
+import NoteAdd from "@mui/icons-material/NoteAdd";
 import { requireAuth } from "../authUtils";
 
 const CertificationData = [
@@ -75,7 +75,7 @@ const CertificateLanding = () => {
                 window.location.href = "/uploadcertificate";
               }}
             >
-              Submit New Acknowledgement
+              Submit New Certificate
             </Button>
           </div>
         </div>

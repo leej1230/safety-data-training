@@ -2,21 +2,28 @@ import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { auth, storage } from "../../lib/FirebaseConfig";
-import { TextField, Button, Input, MenuItem, Select } from "@mui/material";
+import { auth, firestore, storage } from "../../lib/FirebaseConfig";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, addDoc, collection, Timestamp } from "firebase/firestore";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Input from "@mui/material/Input";
+import MenuItem from "@mui/material/MenuItem";
 import Upload from "@mui/icons-material/Upload";
-import { DatePicker } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import {DatePicker} from "@mui/x-date-pickers";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import dayjs from 'dayjs';
 
 const formVerticalMargin = "my-2";
 
 const UploadCertificate = () => {
   const router = useRouter();
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState<File|null>(null);
   const [selectedOption, setSelectedOption] = useState("");
   const [showTrainingName, setShowTrainingName] = useState(false);
   const [training, setTraining] = useState("");
+  const [selectedDate, setSelectedDate] = useState(dayjs());
 
   const getCurrentUserUid = () => {
     const user = auth.currentUser;
@@ -37,16 +44,54 @@ const UploadCertificate = () => {
     setShowTrainingName(selectedValue === "other");
   };
 
-  const handleTrainingChange = (event: any) => {
-    setTraining(event.target.value);
-  };
-
-  const handleSubmit = (event: any) => {
+  const handleSubmit = async (event: any) => {
     event.preventDefault();
-    if(showTrainingName){
+  
+    const uid = getCurrentUserUid();
+  
+    if (!selectedFile) {
+      alert("Choose file!");
+      return;
+    }
+  
+    const uniqueFilename = `${Date.now()}_${selectedFile.name || "invalid"}`;
+    const storageRef = ref(storage, 'certificates/' + uniqueFilename);
+  
+    try {
+      await uploadBytes(storageRef, selectedFile);
+      const pdfUrl = await getDownloadURL(storageRef);
+  
+      if (!selectedDate) {
+        alert("Choose Date");
+        return;
+      }
+  
+      const submissionDate = Timestamp.fromDate(selectedDate.toDate());
+  
+      const certificateData = {
+        pdf: pdfUrl,
+        submissionDate: submissionDate,
+        certificateName: showTrainingName ? training || "Other" : selectedOption,
+        duration: 3,
+        approveStatus: "Pending"
+      };
       
+      const certificatesCollectionRef = collection(firestore, 'certificates');
+      if (uid) {
+        const userDocRef = doc(certificatesCollectionRef, uid);
+        const certificatesSubcollectionRef = collection(userDocRef, 'certificates');
+        const newCertificateDocRef = await addDoc(certificatesSubcollectionRef, certificateData);
+        router.push('/certificatelanding')
+      } else {
+        alert("Try re-login");
+        return;
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Undefined error has occured.");
     }
   };
+  
 
   return (
     <>
@@ -94,7 +139,7 @@ const UploadCertificate = () => {
                       label="Training Name"
                       placeholder="Doe"
                       value={training}
-                      onChange={handleTrainingChange}
+                      onChange={(event: any) => {setTraining(event.target.value)}}
                     />
                   </div>
                 )}
@@ -104,7 +149,10 @@ const UploadCertificate = () => {
                 >
                   <p>Trained Date</p>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker />
+                    <DatePicker 
+                      value={selectedDate}
+                      onChange={(date:any) => {setSelectedDate(date)}}
+                    />
                   </LocalizationProvider>
                 </div>
 
