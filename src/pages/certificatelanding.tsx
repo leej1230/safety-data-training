@@ -1,8 +1,13 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import  Button from "@mui/material/Button";
 import NoteAdd from "@mui/icons-material/NoteAdd";
 import { requireAuth } from "../authUtils";
+import { auth, firestore, storage } from "../../lib/FirebaseConfig";
+import { collection, query, doc, getDocs, getFirestore } from 'firebase/firestore';
+import { useEffect } from "react";
+
 
 const CertificationData = [
   {
@@ -26,6 +31,54 @@ const CertificationData = [
 ];
 
 const CertificateLanding = () => {
+  const router = useRouter();
+
+  const getCurrentUserUid = () => {
+    const user = auth.currentUser
+    if (user) {
+      const uid = user.uid;
+      console.log("Current user UID:", uid);
+      return uid;
+    } else {
+      console.log("No user is currently logged in.");
+      router.push("/signin");
+      return null;
+    }
+  };
+  
+  const fetchUserSubmissions = async (uid: string) => {
+    try {
+      const userDocRef = doc(collection(firestore, 'certificates'), uid);
+      const certificatesSubcollectionRef = collection(userDocRef, 'certificates');
+      const q = query(certificatesSubcollectionRef);
+
+      const querySnapshot = await getDocs(q);
+
+      const submissions = querySnapshot.docs.map((doc) => {
+        const submissionData = doc.data();
+        return {
+          certificateId: doc.id,
+          ...submissionData
+        };
+      });
+
+      console.log(submissions);
+      return submissions;
+    } catch (error) {
+      console.error('Error fetching user submissions:', error);
+      return [];
+    }
+};
+
+  useEffect(()=>{
+    const uid = getCurrentUserUid();
+    if(uid){
+      console.log("ReturnValue:", fetchUserSubmissions(uid));
+    }
+
+  },[]);
+
+
   return (
     <>
       <Head>
@@ -36,7 +89,7 @@ const CertificateLanding = () => {
 
       <main>
         <div className="text-center my-2">
-          <h2>Welcome!</h2>
+          <h2>Welcome {auth.currentUser?.displayName?.split(" ")[0]}!</h2>
           <h2>Check Certificate Status Or Submit.</h2>
         </div>
         <div className="border mx-5 my-3">
