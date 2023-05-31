@@ -1,38 +1,21 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
-import {firebaseApp, auth, firestore, provider} from "../../lib/FirebaseConfig";
-import GoogleButton from "react-google-button";
 import { signInWithPopup } from "firebase/auth";
-import {useRouter} from 'next/router';
-import { getDoc, doc, query, where, getDocs, collection } from "firebase/firestore";
+import { useRouter } from 'next/router';
+import GoogleButton from "react-google-button";
+import { auth, provider } from "../../lib/FirebaseConfig";
 
 const SignIn = () => {
   const router = useRouter();
 
-  const checkUserExists = async (uid:string) => {
+  const handleGoogleSignIn = async () => {
     try {
-      const q = query(collection(firestore, 'users'), where('uid', '==', uid));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.empty;
+      await signInWithPopup(auth, provider);
+      router.push('/certificatelanding');
     } catch (error) {
-      console.log('Error checking user information:', error?.toString());
-      return false;
+      console.log('Error signing in with Google:', error);
     }
   };
-
-  const handleGoogleSignIn = async () =>{
-    try {
-      const result = await signInWithPopup(auth,provider);
-      const userExists = await checkUserExists(result.user.uid);
-      if(userExists){
-        router.push('/updateinfo');
-      } else {
-        router.push('/certificatelanding');
-      }
-    } catch(e) {
-      console.log(e)
-    }
-  }
 
   return (
     <>
@@ -55,7 +38,7 @@ const SignIn = () => {
           </h3>
           <div className="row">
             <div>
-              <GoogleButton onClick={handleGoogleSignIn}/>
+              <GoogleButton onClick={handleGoogleSignIn} />
             </div>
           </div>
         </div>

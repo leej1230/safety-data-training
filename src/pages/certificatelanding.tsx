@@ -2,6 +2,7 @@ import Navbar from "@/components/Navbar";
 import Head from "next/head";
 import { Button } from "@mui/material";
 import { NoteAdd } from "@mui/icons-material";
+import { requireAuth } from "../authUtils";
 
 const CertificationData = [
   {
@@ -83,4 +84,4 @@ const CertificateLanding = () => {
   );
 };
 
-export default CertificateLanding;
+export default requireAuth(CertificateLanding);
