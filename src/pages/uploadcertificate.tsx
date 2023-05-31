@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { auth } from "../../lib/FirebaseConfig";
+import { auth, storage } from "../../lib/FirebaseConfig";
 import { TextField, Button, Input, MenuItem, Select } from "@mui/material";
-import { Upload } from "@mui/icons-material";
+import Upload from "@mui/icons-material/Upload";
 import { DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -43,9 +43,9 @@ const UploadCertificate = () => {
 
   const handleSubmit = (event: any) => {
     event.preventDefault();
-    console.log(selectedFile);
-    console.log(training);
-    // Do something with the selected file and training value, e.g. upload it to a server
+    if(showTrainingName){
+      
+    }
   };
 
   return (
