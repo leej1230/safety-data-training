@@ -3,15 +3,32 @@ import Head from "next/head";
 import { signInWithPopup } from "firebase/auth";
 import { useRouter } from 'next/router';
 import GoogleButton from "react-google-button";
-import { auth, provider } from "../../lib/FirebaseConfig";
+import { auth, provider, firestore } from "../../lib/FirebaseConfig";
+import { getDoc, doc, query, where, getDocs, collection } from "firebase/firestore";
 
 const SignIn = () => {
   const router = useRouter();
 
+  const checkUserExists = async (uid:string) => {
+    try {
+      const q = query(collection(firestore, 'users'), where('uid', '==', uid));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.empty;
+    } catch (error) {
+      console.log('Error checking user information:', error?.toString());
+      return false;
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithPopup(auth, provider);
-      router.push('/certificatelanding');
+      const result = await signInWithPopup(auth,provider);
+      const userExists = await checkUserExists(result.user.uid);
+      if(userExists){
+        router.push('/updateinfo');
+      } else {
+        router.push('/certificatelanding');
+      }
     } catch (error) {
       console.log('Error signing in with Google:', error);
     }
