@@ -6,7 +6,7 @@ import NoteAdd from "@mui/icons-material/NoteAdd";
 import { requireAuth } from "../authUtils";
 import { auth, firestore, storage } from "../../lib/FirebaseConfig";
 import { collection, query, doc, getDocs, getFirestore } from 'firebase/firestore';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 
 const CertificationData = [
@@ -32,6 +32,7 @@ const CertificationData = [
 
 const CertificateLanding = () => {
   const router = useRouter();
+  const [certificates,setCertificates] = useState<any>([]);
 
   const getCurrentUserUid = () => {
     const user = auth.currentUser
@@ -73,7 +74,8 @@ const CertificateLanding = () => {
   useEffect(()=>{
     const uid = getCurrentUserUid();
     if(uid){
-      console.log("ReturnValue:", fetchUserSubmissions(uid));
+      setCertificates(fetchUserSubmissions(uid));
+      console.log("ReturnValue:", certificates);
     }
 
   },[]);
