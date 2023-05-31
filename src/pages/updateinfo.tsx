@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
-import { TextField, Button } from "@mui/material";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
 import {firebaseApp, auth, firestore, provider} from "../../lib/FirebaseConfig";
 import { Upload } from "@mui/icons-material";
 import { useRouter } from "next/router";
@@ -43,6 +44,7 @@ const UpdateInfo = () => {
   const handleSubmit = async () => {
     try{
       await addDoc(collection(firestore, 'users'), {
+        fullName:auth.currentUser?.displayName,
         uid: uid,
         major: major,
         college: college,
@@ -73,28 +75,6 @@ const UpdateInfo = () => {
                 className="card bg-white px-4 py-4 border border-dark border-1"
                 style={{ width: "fit-content" }}
               >
-                {/* <div
-                  className={`form-outline text-center ${formVerticalMargin}`}
-                >
-                  <TextField
-                    required
-                    id="outlined-required"
-                    label="First Name"
-                    placeholder="Jane"
-                  />
-                </div>
-
-                <div
-                  className={`form-outline text-center ${formVerticalMargin}`}
-                >
-                  <TextField
-                    required
-                    id="outlined-required"
-                    label="Last Name"
-                    placeholder="Doe"
-                  />
-                </div> */}
-
                 <div
                   className={`form-outline text-center ${formVerticalMargin}`}
                 >
