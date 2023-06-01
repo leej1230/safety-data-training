@@ -1,95 +1,46 @@
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
-import { useRouter } from "next/router";
 import { requireAuth } from "../authUtils";
 import { firestore } from "../../lib/FirebaseConfig";
-import { collection, query, where, getDocs, collectionGroup } from 'firebase/firestore';
+import { collectionGroup, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
-
-const CertificationData = [
-  {
-    fullName: "John Queen",
-    CertificateTitle: "Certificate A",
-    ApprovedDate: "2021/12/12",
-    ExpirationDate: "2022/3/12",
-    Status: "Expired",
-    CertificateLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-  },
-  {
-    fullName: "Hello World",
-    CertificateTitle: "Certificate B",
-    ApprovedDate: "2023/02/15",
-    ExpirationDate: "2023/10/15",
-    Status: "Valid",
-    CertificateLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-},
-{
-    fullName: "JavaIs Difficult",
-    CertificateTitle: "Certificate C",
-    ApprovedDate: "2023/02/15",
-    ExpirationDate: "2023/10/15",
-    Status: "Pending",
-    CertificateLink: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-  },
-];
+interface Certificate {
+  fullName: string;
+  approveStatus: string;
+  certificateName: string;
+  submissionDate: { toDate: () => Date };
+  duration: number;
+  documentLink: string;
+}
 
 const AdminCertificateList = () => {
-  const router = useRouter();
-
-  const [certificatesList, setCertificatesList] = useState<any>([]);
-
-  const getStudentInfoByUID = async (uid: string): Promise<any> => {
-    try {
-        const q = query(collection(firestore, 'users'), where('uid', '==', uid));
-        const querySnapshot = await getDocs(q);
-    
-        if (!querySnapshot.empty) {
-        const doc = querySnapshot.docs[0];
-        const data = doc.data();
-        return { ...data };
-        } else {
-        return undefined;
-        }
-    } catch (error) {
-        console.error('Error retrieving field:', error);
-        return undefined;
-    }
-};
-
+  const [certificatesList, setCertificatesList] = useState<Certificate[]>([]);
 
   const fetchAllSubmissions = async () => {
-    const certificatesCollectionRef = collectionGroup(firestore, 'certificates');
+    const certificatesCollectionRef = collectionGroup(firestore, "certificates");
     const querySnapshot = await getDocs(certificatesCollectionRef);
 
-    const certificates:any = [];
-
-    querySnapshot.forEach((certificateDoc) => {
-        const certificateData = certificateDoc.data();
-        certificates.push({
-        userId: certificateDoc.ref.parent.parent?.id,
-        certificateId: certificateDoc.id,
+    const certificates: Certificate[] = querySnapshot.docs.map((certificateDoc) => {
+      const certificateData = certificateDoc.data() as Certificate;
+      return {
         ...certificateData,
-        });
+      };
     });
 
     console.log(certificates);
     return certificates;
   };
 
-  const logStudentInfo = async (uid:string) => {
-    const studentInfo = await getStudentInfoByUID(uid);
-    console.log("Student Info:", studentInfo);
-  };
-
-  useEffect(()=>{
-    // Will give you json information of all certificate submission with uid
-    setCertificatesList(fetchAllSubmissions());
-    console.log("ReturnValue:", certificatesList);
-    // Input uid as argument to retrieve student info
-    logStudentInfo('zoYUpLFFN8VCTi5nBR55O4qID3r1');
-  },[]);
-
+  useEffect(() => {
+    const fetchData = async () => {
+      const certificates = await fetchAllSubmissions();
+      setCertificatesList(certificates);
+      console.log("ReturnValue:", certificates);
+    };
+  
+    fetchData();
+  }, []);
 
   return (
     <>
@@ -109,29 +60,49 @@ const AdminCertificateList = () => {
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">
-                  Full Name
-                </th>
-                <th scope="col" colSpan={2}>
-                  Certificate Title
-                </th>
-                <th scope="col">Approved Date</th>
+                <th scope="col">Full Name</th>
+                <th scope="col">Certificate Name</th>
+                <th scope="col">Submission Date</th>
                 <th scope="col">Expiration Date</th>
                 <th scope="col">Status</th>
-                <th scope="col">Download Certificate</th>
+                <th scope="col">Document</th>
               </tr>
             </thead>
             <tbody>
-              {CertificationData.map((cdata, index) => {
+              {certificatesList.map((certificate, index) => {
+                const {
+                  fullName,
+                  approveStatus,
+                  certificateName,
+                  submissionDate,
+                  duration,
+                  documentLink,
+                } = certificate;
+
+                const expirationDate = new Date(
+                  submissionDate.toDate().getTime() + duration * 24 * 60 * 60 * 1000
+                );
+
+                const currentDate = new Date();
+                let status = "Pending";
+
+                if (currentDate > expirationDate) {
+                  status = "Expired";
+                } else {
+                  status = "Valid";
+                }
+
                 return (
                   <tr key={index}>
                     <th scope="row">{index + 1}</th>
-                    <td>{cdata.fullName}</td>
-                    <td colSpan={2}>{cdata.CertificateTitle}</td>
-                    <td>{cdata.ApprovedDate}</td>
-                    <td>{cdata.ExpirationDate}</td>
-                    <td>{cdata.Status}</td>
-                    <td><a href={cdata.CertificateLink}>Link</a></td>
+                    <td>{fullName}</td>
+                    <td>{certificateName}</td>
+                    <td>{submissionDate.toDate().toLocaleDateString()}</td>
+                    <td>{expirationDate.toLocaleDateString()}</td>
+                    <td>{status}</td>
+                    <td>
+                      <a href={documentLink}>Download</a>
+                    </td>
                   </tr>
                 );
               })}
