@@ -2,21 +2,37 @@ import Navbar from "@/components/Navbar";
 import Head from "next/head";
 import { requireAuth } from "../authUtils";
 import { firestore } from "../../lib/FirebaseConfig";
-import { collectionGroup, getDocs } from "firebase/firestore";
+import {
+  collection,
+  query,
+  getDocs,
+  collectionGroup,
+  doc,
+  getDoc,
+  where
+} from "firebase/firestore";
 import { useEffect, useState } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 
-interface Certificate {
+interface User {
   fullName: string;
+  uid: string;
+}
+
+interface Certificate {
   approveStatus: string;
   certificateName: string;
-  submissionDate: { toDate: () => Date };
   duration: number;
-  documentLink: string;
+  pdf: string;
+  submissionDate: { toDate: () => Date };
+  uid: string;
+  fullName?: string;
+  expirationDate?: Date; // Add expirationDate field
 }
 
 const AdminCertificateList = () => {
   const [certificatesList, setCertificatesList] = useState<Certificate[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchAllSubmissions = async () => {
     const certificatesCollectionRef = collectionGroup(
@@ -25,24 +41,61 @@ const AdminCertificateList = () => {
     );
     const querySnapshot = await getDocs(certificatesCollectionRef);
 
-    const certificates: Certificate[] = querySnapshot.docs.map(
-      (certificateDoc) => {
-        const certificateData = certificateDoc.data() as Certificate;
-        return {
-          ...certificateData,
-        };
-      }
-    );
+    const certificates: Certificate[] = [];
 
-    console.log(certificates);
+    for (const certificateDoc of querySnapshot.docs) {
+      const certificateData = certificateDoc.data() as Certificate;
+      const uid = certificateDoc.ref.parent.parent?.id || "";
+      certificates.push({
+        ...certificateData,
+        uid: uid,
+      });
+      console.log("Current user UID:", uid);
+    }
+
     return certificates;
+  };
+
+  const fetchUserFullName = async (userId: string): Promise<string> => {
+    const userCollectionRef = collection(firestore, "users");
+    const userQuery = query(userCollectionRef, where("uid", "==", userId));
+    const userSnapshot = await getDocs(userQuery);
+  
+    if (!userSnapshot.empty) {
+      const userData = userSnapshot.docs[0].data() as User;
+      console.log("Full name:", userData.fullName);
+      return userData.fullName;
+    } else {
+      return "";
+    }
   };
 
   useEffect(() => {
     const fetchData = async () => {
-      const certificates = await fetchAllSubmissions();
-      setCertificatesList(certificates);
-      console.log("ReturnValue:", certificates);
+      try {
+        const certificates = await fetchAllSubmissions();
+
+        const updatedCertificates = await Promise.all(
+          certificates.map(async (certificate) => {
+            const fullName = await fetchUserFullName(certificate.uid);
+
+            const submissionDate = certificate.submissionDate.toDate();
+            const expirationDate = new Date(submissionDate);
+            expirationDate.setDate(expirationDate.getDate() + certificate.duration);
+
+            return {
+              ...certificate,
+              fullName,
+              expirationDate,
+            };
+          })
+        );
+
+        setCertificatesList(updatedCertificates);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching certificates:", error);
+      }
     };
 
     fetchData();
@@ -75,51 +128,42 @@ const AdminCertificateList = () => {
               </tr>
             </thead>
             <tbody>
-              {certificatesList.length !== 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="text-center">
+                    <CircularProgress />
+                  </td>
+                </tr>
+              ) : (
                 certificatesList.map((certificate, index) => {
-                  const {
-                    fullName,
-                    approveStatus,
-                    certificateName,
-                    submissionDate,
-                    duration,
-                    documentLink,
-                  } = certificate;
-
-                  const expirationDate = new Date(
-                    submissionDate.toDate().getTime() +
-                      duration * 24 * 60 * 60 * 1000
-                  );
-
                   const currentDate = new Date();
-                  let status = "Pending";
-
-                  if (currentDate > expirationDate) {
-                    status = "Expired";
-                  } else {
-                    status = "Valid";
-                  }
+                  const expirationDate = certificate.expirationDate || new Date();
+                  const status = currentDate > expirationDate ? "Expired" : "Valid";
 
                   return (
                     <tr key={index}>
                       <th scope="row">{index + 1}</th>
-                      <td>{fullName}</td>
-                      <td>{certificateName}</td>
-                      <td>{submissionDate.toDate().toLocaleDateString()}</td>
-                      <td>{expirationDate.toLocaleDateString()}</td>
+                      <td>{certificate.fullName}</td>
+                      <td>{certificate.certificateName}</td>
+                      <td>
+                        {certificate.submissionDate.toDate().toLocaleDateString()}
+                      </td>
+                      <td>
+                        {expirationDate.toLocaleDateString()}
+                      </td>
                       <td>{status}</td>
                       <td>
-                        <a href={documentLink}>Download</a>
+                        <a
+                          href={certificate.pdf}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          View Document
+                        </a>
                       </td>
                     </tr>
                   );
                 })
-              ) : (
-                <tr>
-                  <td colSpan="7" className="text-center">
-                    <CircularProgress />
-                  </td>
-                </tr>
               )}
             </tbody>
           </table>

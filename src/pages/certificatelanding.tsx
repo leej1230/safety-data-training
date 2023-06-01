@@ -112,11 +112,7 @@ const CertificateLanding = () => {
                 );
 
                 const currentDate = new Date();
-                let status = "Pending";
-
-                if (currentDate > expirationDate) {
-                  status = "Expired";
-                }
+                let status = currentDate > expirationDate ? "Expired" : "Valid";
 
                 return (
                   <tr key={index}>
