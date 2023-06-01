@@ -107,7 +107,8 @@ const CertificateLanding = () => {
                 } = certificate;
 
                 const expirationDate = new Date(
-                  submissionDate.toDate().getTime() + duration * 24 * 60 * 60 * 1000
+                  submissionDate.toDate().getTime() +
+                    duration * 24 * 60 * 60 * 1000
                 );
 
                 const currentDate = new Date();
@@ -115,8 +116,6 @@ const CertificateLanding = () => {
 
                 if (currentDate > expirationDate) {
                   status = "Expired";
-                } else {
-                  status = "Valid";
                 }
 
                 return (
