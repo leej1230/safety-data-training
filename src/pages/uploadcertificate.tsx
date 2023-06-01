@@ -1,31 +1,97 @@
 import React, { useState } from "react";
 import Navbar from "@/components/Navbar";
 import Head from "next/head";
-import { TextField, Button, Input, MenuItem, Select } from "@mui/material";
-import { Upload } from "@mui/icons-material";
-import { DatePicker } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { useRouter } from "next/router";
+import { auth, firestore, storage } from "../../lib/FirebaseConfig";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { doc, addDoc, collection, Timestamp } from "firebase/firestore";
+import TextField from "@mui/material/TextField";
+import Button from "@mui/material/Button";
+import Input from "@mui/material/Input";
+import MenuItem from "@mui/material/MenuItem";
+import Upload from "@mui/icons-material/Upload";
+import {DatePicker} from "@mui/x-date-pickers";
+import {AdapterDayjs} from "@mui/x-date-pickers/AdapterDayjs";
+import {LocalizationProvider} from "@mui/x-date-pickers/LocalizationProvider";
+import dayjs from 'dayjs';
 
 const formVerticalMargin = "my-2";
 
 const UploadCertificate = () => {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const router = useRouter();
+  const [selectedFile, setSelectedFile] = useState<File|null>(null);
   const [selectedOption, setSelectedOption] = useState("");
+  const [showTrainingName, setShowTrainingName] = useState(false);
+  const [training, setTraining] = useState("");
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+
+  const getCurrentUserUid = () => {
+    const user = auth.currentUser;
+    if (user) {
+      const uid = user.uid;
+      console.log("Current user UID:", uid);
+      return uid;
+    } else {
+      console.log("No user is currently logged in.");
+      router.push("/login");
+      return null;
+    }
+  };
 
   const handleChange = (event: any) => {
-    setSelectedOption(event.target.value);
+    const selectedValue = event.target.value;
+    setSelectedOption(selectedValue);
+    setShowTrainingName(selectedValue === "other");
   };
 
-  const handleFileInput = (event: any) => {
-    setSelectedFile(event.target.files[0]);
-  };
-
-  const handleSubmit = (event: any) => {
+  const handleSubmit = async (event: any) => {
     event.preventDefault();
-    console.log(selectedFile);
-    // Do something with the selected file, e.g. upload it to a server
+  
+    const uid = getCurrentUserUid();
+  
+    if (!selectedFile) {
+      alert("Choose file!");
+      return;
+    }
+  
+    const uniqueFilename = `${Date.now()}_${selectedFile.name || "invalid"}`;
+    const storageRef = ref(storage, 'certificates/' + uniqueFilename);
+  
+    try {
+      await uploadBytes(storageRef, selectedFile);
+      const pdfUrl = await getDownloadURL(storageRef);
+  
+      if (!selectedDate) {
+        alert("Choose Date");
+        return;
+      }
+  
+      const submissionDate = Timestamp.fromDate(selectedDate.toDate());
+  
+      const certificateData = {
+        pdf: pdfUrl,
+        submissionDate: submissionDate,
+        certificateName: showTrainingName ? training || "Other" : selectedOption,
+        duration: 3,
+        approveStatus: "Pending"
+      };
+      
+      const certificatesCollectionRef = collection(firestore, 'certificates');
+      if (uid) {
+        const userDocRef = doc(certificatesCollectionRef, uid);
+        const certificatesSubcollectionRef = collection(userDocRef, 'certificates');
+        const newCertificateDocRef = await addDoc(certificatesSubcollectionRef, certificateData);
+        router.push('/certificatelanding')
+      } else {
+        alert("Try re-login");
+        return;
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Undefined error has occured.");
+    }
   };
+  
 
   return (
     <>
@@ -56,30 +122,37 @@ const UploadCertificate = () => {
                     style={{ width: "100%" }}
                     onChange={handleChange}
                   >
-                    <MenuItem value="option1">Training A</MenuItem>
-                    <MenuItem value="option2">Training B</MenuItem>
-                    <MenuItem value="option3">Training C</MenuItem>
+                    <MenuItem value="Training A">Training A</MenuItem>
+                    <MenuItem value="Training B">Training B</MenuItem>
+                    <MenuItem value="other">Other</MenuItem>
                   </TextField>
                 </div>
 
-                <div
-                  className={`form-outline text-center ${formVerticalMargin}`}
-                >
-                  <p>Name of the Training (optional)</p>
-                  <TextField
-                    required
-                    id="outlined-required"
-                    label="Last Name"
-                    placeholder="Doe"
-                  />
-                </div>
+                {showTrainingName && (
+                  <div
+                    className={`form-outline text-center ${formVerticalMargin}`}
+                  >
+                    <p>Name of the Training (optional)</p>
+                    <TextField
+                      required
+                      id="outlined-required"
+                      label="Training Name"
+                      placeholder="Doe"
+                      value={training}
+                      onChange={(event: any) => {setTraining(event.target.value)}}
+                    />
+                  </div>
+                )}
 
                 <div
                   className={`form-outline text-center ${formVerticalMargin}`}
                 >
                   <p>Trained Date</p>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
-                    <DatePicker />
+                    <DatePicker 
+                      value={selectedDate}
+                      onChange={(date:any) => {setSelectedDate(date)}}
+                    />
                   </LocalizationProvider>
                 </div>
 
@@ -88,12 +161,21 @@ const UploadCertificate = () => {
                 >
                   <p>Upload File</p>
                   <form onSubmit={handleSubmit}>
-                    <Input type="file" onChange={handleFileInput} />
+                    <Input
+                      type="file"
+                      onChange={(e: any) => {
+                        setSelectedFile(e.target.files[0]);
+                      }}
+                    />
                   </form>
                 </div>
 
                 <div className="text-center my-3">
-                  <Button variant="contained" endIcon={<Upload />}>
+                  <Button
+                    variant="contained"
+                    endIcon={<Upload />}
+                    onClick={handleSubmit}
+                  >
                     Submit
                   </Button>
                 </div>
