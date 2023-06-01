@@ -2,8 +2,13 @@ import Navbar from "@/components/Navbar";
 import Head from "next/head";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import {firebaseApp, auth, firestore, provider} from "../../lib/FirebaseConfig";
-import { Upload } from "@mui/icons-material";
+import {
+  firebaseApp,
+  auth,
+  firestore,
+  provider,
+} from "../../lib/FirebaseConfig";
+import Upload from "@mui/icons-material/Upload";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { addDoc, collection } from "firebase/firestore";
@@ -12,49 +17,51 @@ const formVerticalMargin = "my-2";
 
 const UpdateInfo = () => {
   const router = useRouter();
-  const [uid, setUid]             = useState("");
-  const [major, setMajor]         = useState("");
-  const [college, setCollege]     = useState("");
+  const [uid, setUid] = useState("");
+  const [major, setMajor] = useState("");
+  const [college, setCollege] = useState("");
   const [groupName, setGroupName] = useState("");
-
 
   const getCurrentUserUid = () => {
     const user = auth.currentUser;
     if (user) {
       const uid = user.uid;
-      console.log('Current user UID:', uid);
+      console.log("Current user UID:", uid);
       return uid;
     } else {
-      console.log('No user is currently logged in.');
-      router.push('/login')
+      console.log("No user is currently logged in.");
+      router.push("/login");
       return null;
     }
   };
-  
+
   useEffect(() => {
     const getuid = getCurrentUserUid();
-    if(getuid){
+    if (getuid) {
       setUid(getuid);
     } else {
-      console.log('Error of fetching user id.');
-      router.push('/login')
+      console.log("Error of fetching user id.");
+      router.push("/login");
     }
   }, []);
 
   const handleSubmit = async () => {
-    try{
-      await addDoc(collection(firestore, 'users'), {
-        fullName:auth.currentUser?.displayName,
+    try {
+      await addDoc(collection(firestore, "users"), {
+        fullName: auth.currentUser?.displayName,
         uid: uid,
         major: major,
         college: college,
         groupName: groupName,
       });
-    } catch(error) {
-      console.log("value couldn't be uploaded due to error: ", error?.toString());
+    } catch (error) {
+      console.log(
+        "value couldn't be uploaded due to error: ",
+        error?.toString()
+      );
     }
-    return
-  }
+    return;
+  };
 
   return (
     <>
@@ -117,7 +124,7 @@ const UpdateInfo = () => {
                     endIcon={<Upload />}
                     onClick={() => {
                       handleSubmit();
-                      router.push('/certificatelanding');
+                      router.push("/certificatelanding");
                     }}
                   >
                     Submit
